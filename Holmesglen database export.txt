@@ -1,0 +1,347 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.0
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1:3306
+-- Generation Time: Apr 05, 2023 at 10:26 AM
+-- Server version: 8.0.29
+-- PHP Version: 8.1.6
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+--
+-- Database: `holmesglen`
+--
+CREATE DATABASE IF NOT EXISTS `holmesglen` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `holmesglen`;
+
+DELIMITER $$
+--
+-- Procedures
+--
+DROP PROCEDURE IF EXISTS `CourseInsert`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `CourseInsert` (IN `id` VARCHAR(10), IN `Course_Name` VARCHAR(30))   BEGIN
+INSERT INTO `course`(`Course_id`, `Name`) VALUES (id, Course_Name);
+END$$
+
+DROP PROCEDURE IF EXISTS `Course_Update`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Course_Update` (IN `Course_Name` VARCHAR(30), IN `ID` VARCHAR(10))   BEGIN
+UPDATE `course` 
+SET `Name`= Course_Name 
+WHERE Course_id = ID;
+END$$
+
+DROP PROCEDURE IF EXISTS `getFirstName`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getFirstName` (IN `name` VARCHAR(20))   BEGIN
+    SELECT *
+    FROM student
+    WHERE First_name = name;
+  END$$
+
+DROP PROCEDURE IF EXISTS `getStudent`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getStudent` ()   BEGIN
+    	SELECT *
+        FROM student;
+    END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course`
+--
+
+DROP TABLE IF EXISTS `course`;
+CREATE TABLE `course` (
+  `Course_id` varchar(10) NOT NULL,
+  `Name` varchar(30) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `course`
+--
+
+INSERT INTO `course` (`Course_id`, `Name`) VALUES
+('ABC123', 'C#'),
+('MNT123', 'Joe'),
+('NET101', 'Networking'),
+('PRO101', 'Programming');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `enrolment`
+--
+
+DROP TABLE IF EXISTS `enrolment`;
+CREATE TABLE `enrolment` (
+  `Student_id` varchar(10) NOT NULL,
+  `Subject_id` varchar(10) NOT NULL,
+  `Start_enrol` varchar(30) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `enrolment`
+--
+
+INSERT INTO `enrolment` (`Student_id`, `Subject_id`, `Start_enrol`) VALUES
+('S001', 'PYT123', '2024 Semester 1'),
+('S002', 'JAV123', '2023 Semester 1'),
+('S003', 'DAT123', '2022 Semester 2'),
+('S004', 'WIR123', '2023 Semester 1'),
+('S005', 'NET123', '2022 Semester 1'),
+('S006', 'PYT123', '2023 Semester 1'),
+('S007', 'NET123', '2023 Semester 1'),
+('S008', 'JAV123', '2022 Semester 1'),
+('S009', 'DAT123', '2023 Semester 1'),
+('S010', 'NET123', '2023 Semester 1'),
+('S011', 'DAT123', '2023 Semester 1'),
+('S012', 'NET123', '2023 Semester 1'),
+('S013', 'PYT123', '2023 Semester 1'),
+('S014', 'JAV123', '2023 Semester 1'),
+('S015', 'DAT123', '2023 Semester 1'),
+('S020', 'PYT123', '2023 Semester 1');
+
+--
+-- Triggers `enrolment`
+--
+DROP TRIGGER IF EXISTS `before_enrolment_insert`;
+DELIMITER $$
+CREATE TRIGGER `before_enrolment_insert` BEFORE INSERT ON `enrolment` FOR EACH ROW BEGIN
+
+DECLARE rowcount INT;
+
+SELECT COUNT(*) INTO rowcount
+FROM enrolment;
+IF rowcount > 0 THEN
+	UPDATE enrolment_count
+    SET totalEnrolment = rowcount + 1, changeDate = NOW();
+ELSE
+	INSERT INTO  enrolment_count VALUES (1, NOW());
+END IF;
+END
+$$
+DELIMITER ;
+DROP TRIGGER IF EXISTS `before_enrolment_update`;
+DELIMITER $$
+CREATE TRIGGER `before_enrolment_update` BEFORE UPDATE ON `enrolment` FOR EACH ROW INSERT INTO enrolment_tracker
+SET action = "update",
+	
+        Student_id  = OLD. Student_id ,    
+        From_Start_enrol  = OLD. Start_enrol ,    
+    	To_Start_enrol  = NEW. Start_enrol ,
+    	changedate = NOW()
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `enrolment_count`
+--
+
+DROP TABLE IF EXISTS `enrolment_count`;
+CREATE TABLE `enrolment_count` (
+  `totalEnrolment` int NOT NULL DEFAULT '0',
+  `changeDate` date DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `enrolment_count`
+--
+
+INSERT INTO `enrolment_count` (`totalEnrolment`, `changeDate`) VALUES
+(16, '2023-04-05');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `enrolment_tracker`
+--
+
+DROP TABLE IF EXISTS `enrolment_tracker`;
+CREATE TABLE `enrolment_tracker` (
+  `Student_id` varchar(10) NOT NULL,
+  `To_Start_enrol` varchar(30) NOT NULL,
+  `From_Start_enrol` varchar(30) NOT NULL,
+  `changeDate` date DEFAULT NULL,
+  `action` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `enrolment_tracker`
+--
+
+INSERT INTO `enrolment_tracker` (`Student_id`, `To_Start_enrol`, `From_Start_enrol`, `changeDate`, `action`) VALUES
+('S001', '2024 Semester 1', '2023 Semester 1', '2023-04-05', 'update');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `result`
+--
+
+DROP TABLE IF EXISTS `result`;
+CREATE TABLE `result` (
+  `Result_id` varchar(10) NOT NULL,
+  `Student_id` varchar(10) NOT NULL,
+  `Grade` varchar(10) DEFAULT NULL,
+  `Feedback` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `result`
+--
+
+INSERT INTO `result` (`Result_id`, `Student_id`, `Grade`, `Feedback`) VALUES
+('R001', 'S001', 'A+', 'NULL'),
+('R002', 'S007', 'B', 'NULL'),
+('R003', 'S008', 'A', 'NULL'),
+('R004', 'S009', 'C', 'NULL'),
+('R005', 'S010', 'B', 'NULL'),
+('R006', 'S002', 'A', 'NULL');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student`
+--
+
+DROP TABLE IF EXISTS `student`;
+CREATE TABLE `student` (
+  `Student_id` varchar(10) NOT NULL,
+  `First_name` varchar(30) NOT NULL,
+  `Last_name` varchar(30) NOT NULL,
+  `Age` int DEFAULT NULL,
+  `Phone_no` int DEFAULT NULL,
+  `Email` varchar(50) DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `student`
+--
+
+INSERT INTO `student` (`Student_id`, `First_name`, `Last_name`, `Age`, `Phone_no`, `Email`) VALUES
+('S001', 'Mia', 'Green', 18, 491570156, 'Mia@gmail.com'),
+('S002', 'Jessy', 'Smith', 19, 491570157, 'Jessy@gmail.com'),
+('S003', 'Kylie', 'White', 19, 491570158, 'Kylie@gmail.com'),
+('S004', 'Jordan', 'Long', 20, 491570159, 'Jordan@gmail.com'),
+('S005', 'Kate', 'Wood', 38, 491570116, 'Kate@gmail.com'),
+('S006', 'Peter', 'Clark', 28, 492570119, 'Peter@gmail.com'),
+('S007', 'Lily', 'Lee', 20, 493570120, 'Lily@gmail.com'),
+('S008', 'Grace', 'Baker', 35, 494570369, 'Grace@gmail.com'),
+('S009', 'Bob', 'Roy', 40, 495570789, 'Bob@gmail.com'),
+('S010', 'Anna', 'Clark', 21, 496570126, 'Anna@gmail.com');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subject`
+--
+
+DROP TABLE IF EXISTS `subject`;
+CREATE TABLE `subject` (
+  `Subject_id` varchar(10) NOT NULL,
+  `Name` varchar(30) NOT NULL,
+  `Subject_desc` varchar(50) DEFAULT NULL,
+  `Hours` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `subject`
+--
+
+INSERT INTO `subject` (`Subject_id`, `Name`, `Subject_desc`, `Hours`) VALUES
+('DAT123', 'Database', 'NULL', 50),
+('JAV123', 'JavaScript', 'NULL', 60),
+('NET123', 'Networks', 'NULL', 80),
+('PYT123', 'Python', '', 60),
+('WIR123', 'Wireless', 'NULL', 80);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `teacher`
+--
+
+DROP TABLE IF EXISTS `teacher`;
+CREATE TABLE `teacher` (
+  `Teacher_id` varchar(10) NOT NULL,
+  `First_name` varchar(30) NOT NULL,
+  `Last_name` varchar(30) NOT NULL,
+  `Level` int DEFAULT NULL,
+  `Salary` int DEFAULT NULL,
+  `Gender` varchar(10) DEFAULT NULL,
+  `DOB` date DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `teacher`
+--
+
+INSERT INTO `teacher` (`Teacher_id`, `First_name`, `Last_name`, `Level`, `Salary`, `Gender`, `DOB`) VALUES
+('OCO789', 'Jo', 'Connor', 5, 100000, 'Male', '1987-08-09'),
+('SMI123', 'Fred', 'Smith', 2, 60000, 'Male', '1998-05-01'),
+('SOM456', 'Jane', 'Somers', 4, 80000, 'Female', '1990-03-18');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `course`
+--
+ALTER TABLE `course`
+  ADD PRIMARY KEY (`Course_id`);
+
+--
+-- Indexes for table `enrolment`
+--
+ALTER TABLE `enrolment`
+  ADD PRIMARY KEY (`Student_id`),
+  ADD KEY `Subject_id` (`Subject_id`);
+
+--
+-- Indexes for table `result`
+--
+ALTER TABLE `result`
+  ADD PRIMARY KEY (`Result_id`),
+  ADD KEY `Student_id` (`Student_id`);
+
+--
+-- Indexes for table `student`
+--
+ALTER TABLE `student`
+  ADD PRIMARY KEY (`Student_id`);
+
+--
+-- Indexes for table `subject`
+--
+ALTER TABLE `subject`
+  ADD PRIMARY KEY (`Subject_id`);
+
+--
+-- Indexes for table `teacher`
+--
+ALTER TABLE `teacher`
+  ADD PRIMARY KEY (`Teacher_id`);
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `enrolment`
+--
+ALTER TABLE `enrolment`
+  ADD CONSTRAINT `enrolment_ibfk_1` FOREIGN KEY (`Subject_id`) REFERENCES `subject` (`Subject_id`);
+
+--
+-- Constraints for table `result`
+--
+ALTER TABLE `result`
+  ADD CONSTRAINT `result_ibfk_1` FOREIGN KEY (`Student_id`) REFERENCES `student` (`Student_id`);
+COMMIT;
